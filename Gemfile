@@ -8,7 +8,7 @@ ruby "3.0.0"
 gem "bootsnap", ">= 1.4.2", require: false
 gem "jbuilder", "~> 2.10.1"
 gem "sqlite3", "~> 1.4"
-gem "puma", "~> 4.1"
+gem "puma", "~> 4.3"
 gem "rails", "~> 6.0.3", ">= 6.0.3.4"
 gem "rubocop-rails_config", "~> 1.3.3"
 
