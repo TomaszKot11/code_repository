@@ -68,99 +68,56 @@ RSpec.describe "Tickets", type: :request do
     end
   end
 
-  describe "POST events#buy_ticket" do
-    subject { post "/tickets/buy", params: params }
+  describe "POST tickets#buy" do
+    let(:ticket) { create(:ticket) }
+    let(:reservation) { create(:reservation, ticket: ticket) }
+    subject { post buy_ticket_path(ticket), params: params }
 
     before { subject }
 
-    context "event exists" do
-      context "ticket exists" do
-        let(:event) { create(:event, :with_ticket) }
-        let(:ticket) { event.ticket }
+    context "ticket and reservation exists" do
+      let(:params) { { reservation_id: reservation.id, token: "token" } }
 
-        context "valid params" do
-          let(:params) { { event_id: event.id, token: "token", tickets_count: "1" } }
-
-          it "should have correct HTTP status" do
-            expect(response).to have_http_status(:ok)
-          end
-
-          it "should render success message" do
-            expect(response_json).to eq({ success: "Payment succeeded." })
-          end
-        end
-
-        context "wrong number of tickets" do
-          let(:params) { { event_id: event.id, token: "token", tickets_count: "-" } }
-
-          it "should have correct HTTP status" do
-            expect(response).to have_http_status(:unprocessable_entity)
-          end
-
-          it "should render success message" do
-            expect(response_json).to eq({ error: "Number of tickets must be greater than zero." })
-          end
-        end
-
-        context "card error" do
-          let(:params) { { event_id: event.id, token: "card_error", tickets_count: "1" } }
-
-          it "should have correct HTTP status" do
-            expect(response).to have_http_status(402)
-          end
-
-          it "should render correct error message" do
-            expect(response_json).to eq({ error: "Your card has been declined." })
-          end
-        end
-
-        context "payment error" do
-          let(:params) { { event_id: event.id, token: "payment_error", tickets_count: "1" } }
-
-          it "should have correct HTTP status" do
-            expect(response).to have_http_status(402)
-          end
-
-          it "should render correct error message" do
-            expect(response_json).to eq({ error: "Something went wrong with your transaction." })
-          end
-        end
-
-        context "not enough tickets left" do
-          let(:params) { { event_id: event.id, token: "token", tickets_count: ticket.available + 1 } }
-
-          it "should have correct HTTP status" do
-            expect(response).to have_http_status(409)
-          end
-
-          it "should render correct error message" do
-            expect(response_json).to eq({ error: "Not enough tickets left." })
-          end
-        end
+      it "reservation should be processed" do
+        reservation.reload
+        expect(reservation.status).to eq("booked")
       end
 
-      context "ticket does not exist" do
-        let(:event) { create(:event) }
-        let(:params) { { event_id: event.id, token: "token", tickets_count: "1" } }
-
-        it "should have correct HTTP status" do
-          expect(response).to have_http_status(:not_found)
-        end
-
-        it "should render error" do
-          expect(response_json).to eq({ error: "Ticket not found." })
-        end
+      it "proper HTTP status should be returned" do
+        expect(response).to have_http_status(:created)
       end
     end
 
-    context "event does not exist" do
-      let(:params) { { event_id: "incorrect", token: "token", tickets_count: "1" } }
+    context "ticket or reservation does not exist" do
+      let(:params) { { reservation_id: -1, token: "token" } }
 
-      it_behaves_like "event not found"
+      it "should return error" do
+        expect(response_json[:errors]).to match_array(["Couldn't find Reservation with 'id'=-1"])
+      end
+
+      it "should return proper HTTP status" do
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    context "Params validation error" do
+      subject { post buy_ticket_path(ticket), params: params }
+
+      before { subject }
+
+      let(:params) do
+        {
+          reservation_id: reservation.id
+        }
+      end
+
+      it "should return error" do
+        expect(response_json[:errors]).to match_array(["Request body should contain payment token."])
+      end
+
+      it "should return HTTP status" do
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
     end
   end
-end
-
-def response_json
-  JSON.parse(response.body).deep_symbolize_keys
 end

@@ -11,12 +11,15 @@ gem "sqlite3", "~> 1.4"
 gem "puma", "~> 4.3"
 gem "rails", "~> 6.0.3", ">= 6.0.3.4"
 gem "rubocop-rails_config", "~> 1.3.3"
+gem "sidekiq-cron", "~> 1.3"
+gem "sidekiq", "~> 6.4"
 
 group :development, :test do
   gem "byebug", "~> 11.1.3"
   gem "factory_bot_rails", "~> 6.1.0"
   gem "faker", "~> 2.14.0"
   gem "rspec-rails", "~> 4.0.1"
+  gem "shoulda-matchers", "~> 5.0"
 end
 
 group :development do

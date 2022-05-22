@@ -62,7 +62,3 @@ RSpec.describe "Events", type: :request do
     end
   end
 end
-
-def response_json
-  JSON.parse(response.body).deep_symbolize_keys
-end
