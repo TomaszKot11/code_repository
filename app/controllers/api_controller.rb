@@ -13,8 +13,4 @@ class ApiController < ApplicationController
   def payment_failed_error(error)
     render json: { error: error.message }, status: :payment_required
   end
-
-  def record_invalid
-    render json: { error: error.message }, status: :payment_required
-  end
 end
